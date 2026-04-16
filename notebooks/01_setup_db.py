@@ -1,5 +1,5 @@
 """
-Notebook 2: Setup Experiment Database
+01 — Setup Experiment Database
 - Compute WVS expected scores for all countries
 - Load all 10 prompts into SQLite
 - Generate all 570 runs (pending status)
@@ -270,9 +270,9 @@ print("All translations saved.")
 
 # %% Cell 6 — Generate all 570 runs
 MODELS = {
-    "claude": "claude-3-5-sonnet-20241022",
-    "gpt4o":  "gpt-4o",
-    "gemini": "gemini-2.0-flash",
+    "claude": "claude-sonnet-4-5-20250929",
+    "gpt4o":  "gpt-5.4",
+    "gemini": "gemini-2.5-flash",
 }
 
 COUNTRY_INSERTS = {

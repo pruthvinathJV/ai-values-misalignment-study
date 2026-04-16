@@ -1,12 +1,12 @@
 """
-Notebook 06 — Analysis & Figures
+04 — Analysis
 Runs after notebook 05 (scoring complete).
 Produces all tables and figures for the paper.
 
 Sections:
   A. Data quality checks (convergence, refusals, coverage)
   B. H1 — Individualist bias test (all models vs WVS)
-  C. H2 — Model comparison (Claude vs GPT-4o vs Gemini)
+  C. H2 — Model comparison (Claude vs GPT-5.4 vs Gemini)
   D. H3 — Sycophancy test (C3 vs C4 shift)
   E. H4 — Prompt-level analysis (P07 and P03 predicted worst)
   F. Statistical tests (Spearman ρ, bootstrap CIs, Cohen's d, Wilcoxon)
@@ -419,7 +419,7 @@ ax.scatter(df_scored["judge1_score"], df_scored["judge2_score"],
            alpha=0.15, s=8, color="#6366f1")
 ax.plot([1,5],[1,5], "r--", linewidth=1, alpha=0.5, label="Perfect agreement")
 ax.set_xlabel("Judge 1 Score (Llama 3.3 70B)")
-ax.set_ylabel("Judge 2 Score (Qwen3-235B)")
+ax.set_ylabel("Judge 2 Score (DeepSeek-V3)")
 ax.set_title(f"Inter-Judge Agreement\nr = {r_j1j2:.3f}, p = {p_j1j2:.4f}")
 ax.set_xlim(1,5); ax.set_ylim(1,5)
 ax.legend()

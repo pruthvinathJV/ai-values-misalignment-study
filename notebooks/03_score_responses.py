@@ -1,9 +1,9 @@
 """
-Notebook 05 — Score Responses (batched + resumable)
+03 — Score Responses (batched + resumable)
 Three methods:
   1. Lexical scoring    — keyword dictionary on English translations
   2. LLM Judge 1       — Llama 3.3 70B via Together AI (Meta)
-  3. LLM Judge 2       — Qwen3-32B via Together AI (Alibaba)
+  3. LLM Judge 2       — DeepSeek-V3 via Together AI
 
 CompositeScore = mean(LexScore_norm, Judge1Score, Judge2Score)
 
@@ -181,7 +181,7 @@ def call_judge1(response_text: str, country: str) -> dict:
 
 
 def call_judge2(response_text: str, country: str) -> dict:
-    """DeepSeek-V3 via Together AI (serverless) — replaced Qwen3-235B (no longer serverless)."""
+    """DeepSeek-V3 via Together AI (serverless)."""
     chat = together_client.chat.completions.create(
         model="deepseek-ai/DeepSeek-V3",
         messages=[{"role":"user","content": JUDGE_PROMPT.format(

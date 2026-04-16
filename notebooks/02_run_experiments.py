@@ -1,5 +1,5 @@
 """
-Notebook 04 — Run Experiments
+02 — Run Experiments
 Iterates over all 570 pending runs in SQLite, calls each API,
 saves responses. Fully resumable — safe to interrupt and restart.
 Run: python3 notebooks/04_run_experiments.py
@@ -55,9 +55,8 @@ def call_gpt4o(prompt: str) -> tuple[str, str]:
 
 def call_gemini(prompt: str) -> tuple[str, str]:
     # thinking_budget=0: disables extended thinking for fair comparison with
-    # Claude and GPT-4o (both run in standard non-thinking mode). Without this,
+    # Claude and GPT-5.4 (both run in standard non-thinking mode). Without this,
     # thinking tokens consume the 600-token budget, truncating actual responses.
-    # Documented in RESEARCH_DECISIONS D20.
     resp = gemini_client.models.generate_content(
         model="gemini-2.5-flash",
         contents=prompt,
@@ -79,7 +78,7 @@ MODEL_FNS = {
 
 print("API functions defined.")
 print(f"  temperature={TEMP}, max_tokens={MAX_TOKENS}, no system prompt")
-print(f"  Models: claude-3-5-sonnet-20241022 | gpt-4o | gemini-2.0-flash")
+print(f"  Models: claude-sonnet-4-5-20250929 | gpt-5.4 | gemini-2.5-flash")
 
 
 # %% ── Cell 3: Fetch pending runs ─────────────────────────────────────────────
@@ -123,7 +122,7 @@ Design:
 
 Controls:
   MODEL_FILTER  = None      → run all 3 models
-                = "gpt4o"   → GPT-4o only
+                = "gpt4o"   → GPT-5.4 only
                 = "claude"  → Claude only
                 = "gemini"  → Gemini only
   BATCH_SIZE    = 30        → commit progress report every 30 calls

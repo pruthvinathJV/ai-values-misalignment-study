@@ -1,6 +1,6 @@
 """
-Notebook 10 — Pipeline overview figure + Sub-dimension secondary analysis
-Run: python3 notebooks/10_pipeline_and_subdim_figures.py
+06 — Pipeline overview + Sub-dimension secondary analysis
+Run: python3 notebooks/06_extra_figures.py
 """
 
 import sqlite3

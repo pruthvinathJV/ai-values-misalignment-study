@@ -1,5 +1,5 @@
 """
-Notebook 09 — Publication-Quality Figures
+05 — Publication-Quality Figures
 Regenerates all 4 figures as PDF (vector) for LaTeX submission.
 Designed for ACL two-column format:
   - Fig 1 (heatmap): full-width, 10×3.5 in
@@ -7,7 +7,7 @@ Designed for ACL two-column format:
   - Fig 3 (prompts): single-column, 3.3×4 in
   - Fig 4 (interjudge): single-column, 3.3×3.3 in
 
-Run: python3 notebooks/09_publication_figures.py
+Run: python3 notebooks/05_publication_figures.py
 """
 
 import sqlite3
@@ -51,8 +51,8 @@ MODEL_COLORS = {
     "gemini": "#009E73",   # green
 }
 MODEL_LABELS = {
-    "claude": "Claude 3.5 Sonnet",
-    "gpt4o":  "GPT-4o",
+    "claude": "Claude Sonnet 4.5",
+    "gpt4o":  "GPT-5.4",
     "gemini": "Gemini 2.5 Flash",
 }
 
