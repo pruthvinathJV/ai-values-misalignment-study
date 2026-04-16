@@ -10,6 +10,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch
+from matplotlib.colors import TwoSlopeNorm
 
 DB_PATH = "experiment.db"
 FIG_DIR = "paper/figures"
@@ -83,14 +84,13 @@ def darrow(ax, x1, y1, x2, y2, color="#555555", lw=1.8):
 
 # ── Layout constants ──────────────────────────────────────────────────────────
 #   5 columns: Design | Prompts | LLMs | Scoring | Results
-GAP   = 0.18   # gap between box right edge and next arrow start
-BH    = 0.62   # standard box height
-BH_L  = 0.70   # tall box height
-PAD_T = 4.62   # top padding for first row
+#   Reduced box widths → 0.60 gap between columns → visible arrows
+BH    = 0.56   # standard box height
+BH_L  = 0.64   # tall LLM box height
 
-# Col x-lefts and widths
-X = [0.10, 2.55, 5.00, 7.80, 11.15]
-BW = [2.25, 2.25, 2.60, 3.15, 2.70]
+# Col x-lefts and widths  (gap between cols = 0.60)
+X  = [0.10,  2.70,  5.40,  8.20, 11.50]
+BW = [2.00,  2.10,  2.20,  2.70,  2.40]
 
 # Row y-centers (3 rows: top, mid, bot)
 Y3 = [3.95, 2.68, 1.42]   # 3 LLMs / judges rows
@@ -112,16 +112,16 @@ design_items = [
     (["7 Languages +", "4 Conditions (C1–C4)", "= 930 API calls"], "#d6eaf8", "#1a5276"),
 ]
 ys0 = [3.62, 2.48, 1.18]
-bh0 = [0.90, 0.90, 1.00]
+bh0 = [0.80, 0.80, 0.90]
 for (lines, fc, ec), y, bh in zip(design_items, ys0, bh0):
     rbox(ax, X[0], y, BW[0], bh, lines, fc, ec, fs=7.8)
 
 # ── Col 1: Prompt Assembly ────────────────────────────────────────────────────
-rbox(ax, X[1], 3.00, BW[1], 1.52,
+rbox(ax, X[1], 3.10, BW[1], 1.36,
      ["Dilemma text", "+ Native/English (C2/C3)", "+ Country label (C3/C4)", "→ 1 prompt per run"],
      "#d5f5e3", "#1e8449", fs=7.8)
 
-rbox(ax, X[1], 1.05, BW[1], 1.72,
+rbox(ax, X[1], 1.10, BW[1], 1.50,
      ["WVS Wave 7", "Anchor scores", "(ground truth for", "each country/prompt)"],
      "#fef9e7", "#b7950b", fs=7.8)
 
@@ -139,17 +139,17 @@ ax.text(X[2]+BW[2]/2, 0.82, "temp=0 · no system prompt · stateless",
         ha="center", fontsize=7.2, color="#555555", style="italic")
 
 # ── Col 3: Scoring ────────────────────────────────────────────────────────────
-rbox(ax, X[3], 3.52, BW[3], 1.08,
+rbox(ax, X[3], 3.58, BW[3], 0.94,
      ["Judge 1 — Llama 3.3 70B (Together AI)",
       "IC score only  (non-IC dims compressed)"],
      "#eaf7fb", "#1a7aab", fs=8.0, bold_first=True)
 
-rbox(ax, X[3], 2.18, BW[3], 1.08,
+rbox(ax, X[3], 2.28, BW[3], 0.94,
      ["Judge 2 — DeepSeek-V3 (Together AI)",
       "IC · Autonomy · Authority · Family"],
      "#eafaf1", "#1e8449", fs=8.0, bold_first=True)
 
-rbox(ax, X[3], 1.02, BW[3], 0.88,
+rbox(ax, X[3], 1.08, BW[3], 0.78,
      ["Inter-judge r = 0.575  (p<0.001, n=837)",
       "Composite = mean(J1_IC, J2_IC)"],
      "#f8f9fa", "#888888", fs=7.8)
@@ -172,28 +172,23 @@ for (lines, fc, ec), y in zip(findings, y_f):
     rbox(ax, X[4], y, BW[4], 0.70, lines, fc, ec, fs=7.5, bold_first=True)
 
 # ── Arrows ────────────────────────────────────────────────────────────────────
-# Col 0 → Col 1: 3 arrows at each row centre
-for y in ys0:
-    harrow(ax, X[0]+BW[0]+0.02, X[1]-0.02, y+bh0[0]/2 if y==ys0[0] else y+0.5,
-           color="#2980b9", lw=2.0)
-
-# Fix: one arrow per design box → prompt box
-harrow(ax, X[0]+BW[0]+0.02, X[1]-0.02, 3.56, "#2980b9", 2.0)
-harrow(ax, X[0]+BW[0]+0.02, X[1]-0.02, 2.93, "#2980b9", 2.0)
-harrow(ax, X[0]+BW[0]+0.02, X[1]-0.02, 1.68, "#2980b9", 2.0)
+# Col 0 → Col 1: one arrow per design box at its vertical centre
+harrow(ax, X[0]+BW[0]+0.02, X[1]-0.02, ys0[0]+bh0[0]/2, "#2980b9", 2.0)
+harrow(ax, X[0]+BW[0]+0.02, X[1]-0.02, ys0[1]+bh0[1]/2, "#2980b9", 2.0)
+harrow(ax, X[0]+BW[0]+0.02, X[1]-0.02, ys0[2]+bh0[2]/2, "#2980b9", 2.0)
 
 # Col 1 → Col 2: prompts to each LLM
 for y_dst in Y3:
-    darrow(ax, X[1]+BW[1]+0.02, 2.76, X[2]-0.02, y_dst, "#333333", 1.8)
+    darrow(ax, X[1]+BW[1]+0.02, 2.76, X[2]-0.02, y_dst+BH_L/2, "#333333", 1.8)
 
 # Col 2 → Col 3: each LLM to both judges
 for y_src in Y3:
-    darrow(ax, X[2]+BW[2]+0.02, y_src, X[3]-0.02, 4.06, "#1a7aab", 1.6)
-    darrow(ax, X[2]+BW[2]+0.02, y_src, X[3]-0.02, 2.72, "#1e8449", 1.6)
+    darrow(ax, X[2]+BW[2]+0.02, y_src+BH_L/2, X[3]-0.02, 4.06, "#1a7aab", 1.6)
+    darrow(ax, X[2]+BW[2]+0.02, y_src+BH_L/2, X[3]-0.02, 2.72, "#1e8449", 1.6)
 
 # WVS → scoring composite
 harrow(ax, X[1]+BW[1]+0.02, X[3]+BW[3]/2, 1.46, "#b7950b", 1.8)
-ax.annotate("", xy=(X[3]+BW[3]/2, 1.46), xytext=(X[3]+BW[3]/2, 0.90),
+ax.annotate("", xy=(X[3]+BW[3]/2, 1.40), xytext=(X[3]+BW[3]/2, 0.92),
     arrowprops=dict(arrowstyle="-|>", color="#b7950b", lw=1.6, mutation_scale=12), zorder=5)
 
 # Col 3 → Col 4
@@ -231,41 +226,45 @@ PROMPT_LABELS = {
 
 fig, axes = plt.subplots(1, 2, figsize=(13, 4.5))
 
-# ── Left panel: per-prompt grouped bars ──
+# ── Left panel: heatmap (4 dims × 10 prompts) ────────────────────────────────
 ax = axes[0]
-rng = np.random.default_rng(42)
 prompt_means = df.groupby("prompt_id")[DIMS].mean()
 prompt_means = prompt_means.loc[PROMPT_ORDER]
 
-n_prompts = len(PROMPT_ORDER)
-n_dims    = len(DIMS)
-bar_w     = 0.18
-x         = np.arange(n_prompts)
+# rows = dimensions, cols = prompts
+data = prompt_means[DIMS].T.values   # shape (4, 10)
 
-for i, (dim, lbl, col) in enumerate(zip(DIMS, DIM_LBLS, DIM_COLORS)):
-    offset = (i - (n_dims-1)/2) * bar_w
-    vals   = prompt_means[dim].values
-    bars   = ax.bar(x + offset, vals, bar_w, label=lbl.replace("\n", " "),
-                    color=col, alpha=0.85, zorder=3)
+norm = TwoSlopeNorm(vmin=1.5, vcenter=3.0, vmax=5.5)
+im   = ax.imshow(data, cmap="RdBu_r", norm=norm, aspect="auto")
 
-ax.axhline(y=3.0, color="black", linewidth=0.8, linestyle="--", alpha=0.6,
-           label="Neutral (3.0)", zorder=2)
-ax.set_xticks(x)
-ax.set_xticklabels([PROMPT_LABELS[p].split("\n")[0] for p in PROMPT_ORDER],
-                   fontsize=8.5)
-ax.set_ylabel("Mean Score (1=collectivist, 5=individualist)", fontsize=9)
-ax.set_ylim(1.5, 5.5)
-ax.set_title("(a) Sub-dimension scores by dilemma topic\n(DeepSeek-V3 judge)",
-             fontsize=9.5, pad=4, loc="left")
-ax.legend(fontsize=8, frameon=True, loc="upper left", ncol=2)
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
+ax.set_xticks(range(len(PROMPT_ORDER)))
+xlbls = [f"{p}\n{PROMPT_LABELS[p].split(chr(10))[1]}" for p in PROMPT_ORDER]
+ax.set_xticklabels(xlbls, fontsize=7.5, rotation=20, ha="right")
+ax.set_yticks(range(len(DIMS)))
+ax.set_yticklabels(["IC Score", "Autonomy", "Authority\nDeference", "Family\nOrientation"],
+                   fontsize=9)
 
-# Add prompt descriptions below x-axis
-for i, pid in enumerate(PROMPT_ORDER):
-    short = PROMPT_LABELS[pid].split("\n")[1]
-    ax.text(i, 1.3, short, ha="center", va="top", fontsize=6.5,
-            color="#555555", rotation=20)
+# Annotate each cell
+for i in range(len(DIMS)):
+    for j in range(len(PROMPT_ORDER)):
+        val = data[i, j]
+        color = "white" if abs(val - 3.0) > 0.8 else "black"
+        ax.text(j, i, f"{val:.2f}", ha="center", va="center",
+                fontsize=7.5, color=color, fontweight="bold")
+
+# Grid
+for j in range(len(PROMPT_ORDER)):
+    ax.axvline(j - 0.5, color="white", linewidth=0.5)
+for i in range(len(DIMS)):
+    ax.axhline(i - 0.5, color="white", linewidth=0.5)
+
+cbar = plt.colorbar(im, ax=ax, fraction=0.025, pad=0.02)
+cbar.set_label("Score\n(1=collectivist, 5=individualist)", fontsize=7.5)
+cbar.ax.tick_params(labelsize=7)
+
+ax.set_title("(a) Sub-dimension mean scores by dilemma topic\n"
+             "(DeepSeek-V3 judge, averaged over all countries and models)",
+             fontsize=9, pad=4, loc="left")
 
 # ── Right panel: per-model radar / bar ──
 ax2 = axes[1]

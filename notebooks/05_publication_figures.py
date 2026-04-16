@@ -176,6 +176,15 @@ for ax, model in zip(axes, ["claude","gpt4o","gemini"]):
         ax.scatter([ci + j for j in jitter], country_means,
                    s=14, color="#aaaaaa", alpha=0.55, zorder=2, linewidths=0)
 
+        # Label Japan (reversal outlier) and Nigeria (highest collectivist gap)
+        # only on C1 to avoid clutter
+        if ci == 0:
+            for cty, jit, mean in zip(COUNTRY_ORDER, jitter, country_means):
+                if cty in ("JPN", "NGA") and not np.isnan(mean):
+                    ax.annotate(cty, (ci + jit, mean),
+                                xytext=(6, 0), textcoords="offset points",
+                                fontsize=6.5, color="#444444", va="center")
+
     # ── Model mean line + shaded CI ──
     ax.plot(x, cond_means, color=MODEL_COLORS[model],
             linewidth=2.2, marker="o", markersize=6, zorder=4,
