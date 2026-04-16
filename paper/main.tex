@@ -108,7 +108,7 @@ vs.\ collectivist the \emph{advice} is, benchmarked against World Values
 Survey Wave~7 (WVS) data from the same countries \citep{wvs-2022}.
 
 Our key contributions over prior work are:
-\begin{enumerate}
+\begin{enumerate}[noitemsep,topsep=3pt]
   \item \textbf{Behavioral scenarios} instead of transparent value
     questionnaires, eliminating social desirability confounds;
   \item A \textbf{4-condition design} that cleanly separates language effects
@@ -144,6 +144,24 @@ desirability confound inherent in transparent questionnaire items.
 offer no empirical measurement. We operationalize and quantify what they
 catalogue.
 
+\paragraph{Closest prior work.}
+\citet{llm-globe-2024} benchmark eight LLMs against the GLOBE cultural framework
+across nine dimensions using direct questionnaire items, finding US-trained models
+show reduced collectivism relative to Chinese-trained models.
+Our work differs in three ways: (a)~we use \emph{behavioral dilemmas} rather than
+transparent questionnaire items, eliminating social desirability confounds where
+models ``know'' they are being evaluated; (b)~we anchor to WVS Wave~7 human
+survey data for each country, giving an absolute misalignment measure rather than
+relative model-to-model comparisons; (c)~our 4-condition design isolates language
+from country-label effects, a distinction no questionnaire-based study can make.
+
+Contemporaneously, \citet{anthropic-2025-values} analyzed 308K real Claude
+conversations and found that Claude actively expresses values---emphasizing
+personal autonomy and individual enablement---in approximately 35\% of exchanges.
+Our findings extend this: these expressed values are not culturally neutral.
+They systematically favor individualist frameworks over the cultural orientations
+of users from collectivist societies (mean misalignment $= +0.888$ for Claude alone).
+
 \paragraph{Cultural dimensions theory.}
 Our individualism--collectivism (I--C) framing follows \citet{hofstede-2001},
 operationalized through WVS Wave~7 items capturing family duty, authority
@@ -154,7 +172,7 @@ societies as the primary population at risk of cultural misalignment.
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Methodology}
 
-\begin{figure*}[t]
+\begin{figure*}[!ht]
   \centering
   \includegraphics[width=\textwidth]{figures/fig0_pipeline.pdf}
   \caption{Study pipeline overview. Left to right: study design
@@ -471,11 +489,15 @@ All conditions shift scores toward more collectivist values relative to C1
 \begin{figure*}[t]
   \centering
   \includegraphics[width=\textwidth]{figures/fig2_conditions.pdf}
-  \caption{Composite IC score by condition (C1--C4) per model. Colored line
-  shows model mean $\pm$ 95\% bootstrap CI; grey dots show individual country
-  means (jittered). C1 = English baseline; C4 = English + country label.
-  A difference between C3 (native\,+\,label) and C4 (English\,+\,label)
-  indicates language carries signal beyond the country label.}
+  \caption{Composite IC score across experimental conditions (C1--C4) per model.
+  Colored line = model mean $\pm$ 95\% bootstrap CI.
+  Grey dots = individual country means (10 countries, jittered horizontally to
+  reduce overlap); Japan (JPN) and Nigeria (NGA) are labelled on C1 as the most
+  extreme outliers---Japan sits near or below neutral (3.0) while Nigeria is
+  consistently highest.
+  C1 = English, no label; C2 = native language, no label;
+  C3 = native + country label; C4 = English + country label.
+  A C3--C4 gap indicates language carries cultural signal beyond the stated country.}
   \label{fig:conditions}
 \end{figure*}
 
@@ -566,13 +588,16 @@ Table~\ref{tab:subdims} reveal a nuanced picture beyond the IC headline:
 \begin{figure*}[t]
   \centering
   \includegraphics[width=\textwidth]{figures/fig5_subdimensions.pdf}
-  \caption{Sub-dimension scores from DeepSeek-V3 judge.
-  (a)~Per-dilemma means: autonomy is near ceiling (${\approx}5$) for health
-  and doctor dilemmas; family orientation is highest for religion and
-  eldest-abroad scenarios.
-  (b)~Per-model means: all models score above neutral on IC and autonomy;
-  all models score below neutral on family orientation.
-  Dashed line = neutral (3.0). IC = primary composite dimension.}
+  \caption{Sub-dimension scores from DeepSeek-V3 judge ($n=837$).
+  \textbf{(a)}~Heatmap of mean scores per dilemma (rows = dimensions, columns = prompts P01--P10);
+  red = individualist ($>3$), blue = collectivist ($<3$), white = neutral.
+  Autonomy is near ceiling across most dilemmas; family orientation is collectivist
+  (blue) for religion and arranged-marriage scenarios.
+  \textbf{(b)}~Per-model mean scores across all four dimensions.
+  All three models score well above neutral on IC (${\approx}4.0$) and autonomy (${\approx}4.5$);
+  all score below neutral on family orientation (${\approx}2.8$), confirming the
+  individualist pattern holds across sub-dimensions.
+  Dashed line = neutral (3.0).}
   \label{fig:subdims}
 \end{figure*}
 
