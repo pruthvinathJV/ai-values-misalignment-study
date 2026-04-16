@@ -9,9 +9,7 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
-from scipy import stats
+from matplotlib.patches import FancyBboxPatch
 
 DB_PATH = "experiment.db"
 FIG_DIR = "paper/figures"
@@ -44,173 +42,164 @@ df = pd.read_sql("""
 con.close()
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# FIGURE 0 — Pipeline Overview
+# FIGURE 0 — Pipeline Overview  (compact, tight layout)
 # ═══════════════════════════════════════════════════════════════════════════════
-print("Generating Fig 0 — Pipeline overview...")
+print("Generating Fig 0 — Pipeline overview (compact)...")
 
-fig, ax = plt.subplots(figsize=(15, 6.5))
-ax.set_xlim(0, 15)
-ax.set_ylim(0, 6.5)
+W, H = 14.0, 5.0
+fig, ax = plt.subplots(figsize=(W, H))
+ax.set_xlim(0, W); ax.set_ylim(0, H)
 ax.axis("off")
 
-# ── Helper functions ──────────────────────────────────────────────────────────
-def box(ax, x, y, w, h, text, facecolor, edgecolor, fontsize=9, bold=False,
-        text_color="black", radius=0.15, valign="center", subtext=None):
+# ── Helpers ───────────────────────────────────────────────────────────────────
+def rbox(ax, x, y, w, h, lines, fc, ec, lw=1.4, fs=8.5, bold_first=False):
+    """Rounded box; lines = list of strings stacked top→bottom."""
     patch = FancyBboxPatch((x, y), w, h,
-                           boxstyle=f"round,pad=0.05,rounding_size={radius}",
-                           facecolor=facecolor, edgecolor=edgecolor,
-                           linewidth=1.2, zorder=3)
+        boxstyle="round,pad=0.04,rounding_size=0.12",
+        facecolor=fc, edgecolor=ec, linewidth=lw, zorder=3, clip_on=False)
     ax.add_patch(patch)
-    weight = "bold" if bold else "normal"
-    cy = y + h / 2
-    if subtext:
-        ax.text(x + w/2, cy + 0.15, text, ha="center", va="center",
-                fontsize=fontsize, fontweight=weight, color=text_color, zorder=4)
-        ax.text(x + w/2, cy - 0.20, subtext, ha="center", va="center",
-                fontsize=fontsize - 1.5, color="#555555", style="italic", zorder=4)
-    else:
-        ax.text(x + w/2, cy, text, ha="center", va=valign,
-                fontsize=fontsize, fontweight=weight, color=text_color, zorder=4,
-                multialignment="center")
+    n = len(lines)
+    step = h / (n + 1)
+    for i, txt in enumerate(lines):
+        fw = "bold" if (i == 0 and bold_first) else "normal"
+        sty = "italic" if txt.startswith("(") else "normal"
+        ax.text(x + w/2, y + h - step*(i+1) + step*0.1,
+                txt, ha="center", va="center",
+                fontsize=fs, fontweight=fw, fontstyle=sty,
+                color="#111111", zorder=4)
 
-def arrow(ax, x1, y1, x2, y2, color="#555555", lw=1.5):
+def harrow(ax, x1, x2, y, color="#333333", lw=2.2):
+    """Straight horizontal arrow."""
+    ax.annotate("", xy=(x2, y), xytext=(x1, y),
+        arrowprops=dict(arrowstyle="-|>", color=color,
+                        lw=lw, mutation_scale=16), zorder=5)
+
+def darrow(ax, x1, y1, x2, y2, color="#555555", lw=1.8):
+    """Diagonal arrow."""
     ax.annotate("", xy=(x2, y2), xytext=(x1, y1),
-                arrowprops=dict(arrowstyle="-|>", color=color,
-                                lw=lw, mutation_scale=14),
-                zorder=2)
+        arrowprops=dict(arrowstyle="-|>", color=color,
+                        lw=lw, mutation_scale=14,
+                        connectionstyle="arc3,rad=0.0"), zorder=5)
 
-# ── Column x-positions ────────────────────────────────────────────────────────
-C0 = 0.15   # Study design
-C1 = 2.85   # Prompts generated
-C2 = 5.25   # Three LLMs
-C3 = 8.05   # Scoring
-C4 = 11.2   # Output / analysis
+# ── Layout constants ──────────────────────────────────────────────────────────
+#   5 columns: Design | Prompts | LLMs | Scoring | Results
+GAP   = 0.18   # gap between box right edge and next arrow start
+BH    = 0.62   # standard box height
+BH_L  = 0.70   # tall box height
+PAD_T = 4.62   # top padding for first row
 
-# ─────────────────────────────── Col 0: Study Design ─────────────────────────
-ax.text(C0 + 1.05, 6.25, "Study Design", ha="center", fontsize=10,
-        fontweight="bold", color="#222222")
+# Col x-lefts and widths
+X = [0.10, 2.55, 5.00, 7.80, 11.15]
+BW = [2.25, 2.25, 2.60, 3.15, 2.70]
 
-BOX_W0 = 2.1
-items_col0 = [
-    ("10 Countries\n(5 continents)", "#d4e6f1"),
-    ("10 Dilemma\nPrompts (P01–P10)", "#d4e6f1"),
-    ("7 Languages", "#d4e6f1"),
-    ("4 Conditions\n(C1–C4)", "#d4e6f1"),
+# Row y-centers (3 rows: top, mid, bot)
+Y3 = [3.95, 2.68, 1.42]   # 3 LLMs / judges rows
+Y2 = [3.30, 1.90]          # 2-row layout
+
+# ── Column headers ────────────────────────────────────────────────────────────
+headers = ["[1] Study Design", "[2] Prompt Assembly",
+           "[3] Frontier LLMs", "[4] LLM Scoring", "[5] Analysis"]
+hcolors = ["#1a5276","#117a65","#6c3483","#154360","#922b21"]
+for i, (hdr, hc) in enumerate(zip(headers, hcolors)):
+    ax.text(X[i] + BW[i]/2, H - 0.22, hdr,
+            ha="center", va="center", fontsize=8.5,
+            fontweight="bold", color=hc)
+
+# ── Col 0: Study Design ───────────────────────────────────────────────────────
+design_items = [
+    (["10 Countries", "(5 continents, incl.", "Africa/Asia/Europe)"], "#d6eaf8", "#2980b9"),
+    (["10 Dilemmas", "(P01–P10: marriage,", "career, authority…)"], "#d6eaf8", "#2980b9"),
+    (["7 Languages +", "4 Conditions (C1–C4)", "= 930 API calls"], "#d6eaf8", "#1a5276"),
 ]
-y_starts = [4.60, 3.50, 2.40, 1.15]
-for (txt, col), ys in zip(items_col0, y_starts):
-    box(ax, C0, ys, BOX_W0, 0.85, txt, col, "#2980b9", fontsize=8.5)
+ys0 = [3.62, 2.48, 1.18]
+bh0 = [0.90, 0.90, 1.00]
+for (lines, fc, ec), y, bh in zip(design_items, ys0, bh0):
+    rbox(ax, X[0], y, BW[0], bh, lines, fc, ec, fs=7.8)
 
-# Multiplication arrow → 930
-ax.text(C0 + BOX_W0/2, 0.72, "3 models × 310 combos", ha="center",
-        fontsize=7.5, color="#666666", style="italic")
-ax.text(C0 + BOX_W0/2, 0.38, "= 930 API calls", ha="center",
-        fontsize=8.5, fontweight="bold", color="#1a5276")
+# ── Col 1: Prompt Assembly ────────────────────────────────────────────────────
+rbox(ax, X[1], 3.00, BW[1], 1.52,
+     ["Dilemma text", "+ Native/English (C2/C3)", "+ Country label (C3/C4)", "→ 1 prompt per run"],
+     "#d5f5e3", "#1e8449", fs=7.8)
 
-# ─────────────────────────────── Col 1: Prompt Assembly ──────────────────────
-ax.text(C1 + 1.05, 6.25, "Prompt Assembly", ha="center", fontsize=10,
-        fontweight="bold", color="#222222")
+rbox(ax, X[1], 1.05, BW[1], 1.72,
+     ["WVS Wave 7", "Anchor scores", "(ground truth for", "each country/prompt)"],
+     "#fef9e7", "#b7950b", fs=7.8)
 
-box(ax, C1, 3.5, 2.1, 2.2,
-    "Each prompt =\nDilemma text\n+ Language (C2/C3)\n+ Country label (C3/C4)\nor English/no label (C1)",
-    "#eaf4fb", "#2980b9", fontsize=8)
-
-box(ax, C1, 1.8, 2.1, 1.4,
-    "C1: English, no label\nC2: Native, no label\nC3: Native + label\nC4: English + label",
-    "#fdfefe", "#7f8c8d", fontsize=7.5)
-
-box(ax, C1, 0.2, 2.1, 1.3,
-    "WVS Wave 7\nAnchor scores\n(ground truth)", "#fef9e7", "#d4ac0d", fontsize=8.5)
-
-# ─────────────────────────────── Col 2: Three LLMs ───────────────────────────
-ax.text(C2 + 1.35, 6.25, "Frontier LLMs", ha="center", fontsize=10,
-        fontweight="bold", color="#222222")
-
-llms = [
-    ("Claude Sonnet 4.5", "claude-sonnet-4-5\n-20250929", "#fdebd0", "#e67e22"),
-    ("GPT-5.4",           "gpt-5.4-2026-03-05",           "#fdf2f8", "#8e44ad"),
-    ("Gemini 2.5 Flash",  "gemini-2.5-flash",             "#e8f8f5", "#1e8449"),
+# ── Col 2: Three LLMs ────────────────────────────────────────────────────────
+llm_data = [
+    (["Claude Sonnet 4.5", "claude-sonnet-4-5-20250929"], "#fdebd0", "#e67e22"),
+    (["GPT-5.4",           "gpt-5.4-2026-03-05"],         "#f5eef8", "#7d3c98"),
+    (["Gemini 2.5 Flash",  "gemini-2.5-flash"],            "#e8f8f5", "#1e8449"),
 ]
-y_llm = [4.55, 2.95, 1.35]
-for (name, ver, fc, ec), y in zip(llms, y_llm):
-    box(ax, C2, y, 2.7, 1.3, name, fc, ec, fontsize=9, bold=True,
-        subtext=ver)
+for (lines, fc, ec), y in zip(llm_data, Y3):
+    rbox(ax, X[2], y - 0.36, BW[2], BH_L, lines, fc, ec,
+         fs=8.2, bold_first=True, lw=1.8)
 
-ax.text(C2 + 1.35, 0.65, "temp = 0, no system prompt\nstateless API calls",
-        ha="center", fontsize=7.5, color="#666666", style="italic")
+ax.text(X[2]+BW[2]/2, 0.82, "temp=0 · no system prompt · stateless",
+        ha="center", fontsize=7.2, color="#555555", style="italic")
 
-# ─────────────────────────────── Col 3: Scoring ──────────────────────────────
-ax.text(C3 + 1.45, 6.25, "Scoring", ha="center", fontsize=10,
-        fontweight="bold", color="#222222")
+# ── Col 3: Scoring ────────────────────────────────────────────────────────────
+rbox(ax, X[3], 3.52, BW[3], 1.08,
+     ["Judge 1 — Llama 3.3 70B (Together AI)",
+      "IC score only  (non-IC dims compressed)"],
+     "#eaf7fb", "#1a7aab", fs=8.0, bold_first=True)
 
-# Judge 1
-box(ax, C3, 4.55, 2.9, 1.5,
-    "Judge 1\nLlama 3.3 70B\n(Together AI)",
-    "#eaf7fb", "#1a7aab", fontsize=8, bold=False)
-ax.text(C3 + 1.45, 4.35, "IC score only\n(non-IC dims compressed)",
-        ha="center", fontsize=7, color="#888888", style="italic")
+rbox(ax, X[3], 2.18, BW[3], 1.08,
+     ["Judge 2 — DeepSeek-V3 (Together AI)",
+      "IC · Autonomy · Authority · Family"],
+     "#eafaf1", "#1e8449", fs=8.0, bold_first=True)
 
-# Judge 2
-box(ax, C3, 2.65, 2.9, 1.5,
-    "Judge 2\nDeepSeek-V3\n(Together AI)",
-    "#eafaf1", "#1e8449", fontsize=8, bold=False)
-ax.text(C3 + 1.45, 2.45, "IC + Autonomy +\nAuthority + Family",
-        ha="center", fontsize=7, color="#555555", style="italic")
+rbox(ax, X[3], 1.02, BW[3], 0.88,
+     ["Inter-judge r = 0.575  (p<0.001, n=837)",
+      "Composite = mean(J1_IC, J2_IC)"],
+     "#f8f9fa", "#888888", fs=7.8)
 
-# Inter-judge
-box(ax, C3, 1.2, 2.9, 1.1,
-    "Inter-judge: r = 0.575\n(IC scores, n=837)",
-    "#f9f9f9", "#aaaaaa", fontsize=7.5)
+ax.text(X[3]+BW[3]/2, 0.50,
+        "Misalignment = Composite − WVS anchor",
+        ha="center", fontsize=8.0, fontweight="bold",
+        color="#7d6608", style="italic")
 
-# Composite
-box(ax, C3, 0.1, 2.9, 0.9,
-    "Composite = mean(J1_IC, J2_IC)",
-    "#fdfefe", "#555555", fontsize=7.5, bold=False)
-
-# ─────────────────────────────── Col 4: Analysis ─────────────────────────────
-ax.text(C4 + 1.35, 6.25, "Analysis & Findings", ha="center", fontsize=10,
-        fontweight="bold", color="#222222")
-
+# ── Col 4: Findings ───────────────────────────────────────────────────────────
 findings = [
-    ("H1: Individualist bias\n(t=15.65, p<0.001)", "#fdedec", "#c0392b"),
-    ("H2: Model comparison\n(Claude≈GPT-5.4 > Gemini)", "#fef9e7", "#b7950b"),
-    ("H3: Language vs. label\n(Claude & Gemini differ)", "#eaf4fb", "#2471a3"),
-    ("H4: Domain effects\n(Marriage > Authority)", "#f4ecf7", "#7d3c98"),
-    ("Secondary: Sub-dims\n(DeepSeek, Autonomy=4.54)", "#e8f8f5", "#1e8449"),
+    (["H1: All models individualist-biased",  "mean=+0.76, t=15.65, p<0.001"], "#fdedec","#c0392b"),
+    (["H2: Claude ≈ GPT-5.4 > Gemini",        "d=0.024 vs d≈0.32"],            "#fef9e7","#b7950b"),
+    (["H3: Language effect varies by model",  "Claude↓ Gemini↑ GPT-5.4 n.s."], "#eaf4fb","#2471a3"),
+    (["H4: Marriage > Authority bias",         "P02=+1.85, P03=−0.26"],         "#f4ecf7","#7d3c98"),
+    (["Sub-dims: Autonomy=4.54 (ceiling!)",   "Family=2.77 (collectivist)"],    "#e8f8f5","#1e8449"),
 ]
-y_f = [5.20, 4.15, 3.10, 2.05, 1.00]
-for (txt, fc, ec), y in zip(findings, y_f):
-    box(ax, C4, y, 2.7, 0.85, txt, fc, ec, fontsize=8)
+y_f = [4.05, 3.22, 2.39, 1.56, 0.73]
+for (lines, fc, ec), y in zip(findings, y_f):
+    rbox(ax, X[4], y, BW[4], 0.70, lines, fc, ec, fs=7.5, bold_first=True)
 
-# WVS comparison bracket at bottom
-ax.annotate("", xy=(C4, 0.55), xytext=(C1 + 2.1, 0.55),
-            arrowprops=dict(arrowstyle="-|>", color="#d4ac0d", lw=1.5,
-                            connectionstyle="arc3,rad=0"), zorder=2)
-ax.text((C1 + 2.1 + C4)/2, 0.35, "Misalignment = Composite − WVS anchor",
-        ha="center", fontsize=8, color="#b7950b", style="italic")
+# ── Arrows ────────────────────────────────────────────────────────────────────
+# Col 0 → Col 1: 3 arrows at each row centre
+for y in ys0:
+    harrow(ax, X[0]+BW[0]+0.02, X[1]-0.02, y+bh0[0]/2 if y==ys0[0] else y+0.5,
+           color="#2980b9", lw=2.0)
 
-# ── Arrows between columns ────────────────────────────────────────────────────
-# Col0 → Col1
-for y in [5.02, 3.92, 2.82, 1.57]:
-    arrow(ax, C0 + BOX_W0, y, C1, y, color="#2980b9", lw=1.2)
+# Fix: one arrow per design box → prompt box
+harrow(ax, X[0]+BW[0]+0.02, X[1]-0.02, 3.56, "#2980b9", 2.0)
+harrow(ax, X[0]+BW[0]+0.02, X[1]-0.02, 2.93, "#2980b9", 2.0)
+harrow(ax, X[0]+BW[0]+0.02, X[1]-0.02, 1.68, "#2980b9", 2.0)
 
-# Col1 → Col2 (prompts → LLMs)
-for y_src, y_dst in [(4.6, 5.2), (4.6, 3.6), (4.6, 2.0)]:
-    arrow(ax, C1 + 2.1, y_src, C2, y_dst, color="#555555", lw=1.2)
+# Col 1 → Col 2: prompts to each LLM
+for y_dst in Y3:
+    darrow(ax, X[1]+BW[1]+0.02, 2.76, X[2]-0.02, y_dst, "#333333", 1.8)
 
-# Col2 → Col3 (LLMs → judges)
-for y_src in [5.2, 3.6, 2.0]:
-    arrow(ax, C2 + 2.7, y_src, C3, 5.0, color="#888888", lw=0.8)
-    arrow(ax, C2 + 2.7, y_src, C3, 3.0, color="#888888", lw=0.8)
+# Col 2 → Col 3: each LLM to both judges
+for y_src in Y3:
+    darrow(ax, X[2]+BW[2]+0.02, y_src, X[3]-0.02, 4.06, "#1a7aab", 1.6)
+    darrow(ax, X[2]+BW[2]+0.02, y_src, X[3]-0.02, 2.72, "#1e8449", 1.6)
 
-# Col3 → Col4
-arrow(ax, C3 + 2.9, 1.55, C4, 3.5, color="#555555", lw=1.5)
+# WVS → scoring composite
+harrow(ax, X[1]+BW[1]+0.02, X[3]+BW[3]/2, 1.46, "#b7950b", 1.8)
+ax.annotate("", xy=(X[3]+BW[3]/2, 1.46), xytext=(X[3]+BW[3]/2, 0.90),
+    arrowprops=dict(arrowstyle="-|>", color="#b7950b", lw=1.6, mutation_scale=12), zorder=5)
 
-# Title
-ax.text(7.5, 6.5, "Study Pipeline: When AI Speaks, Whose Values Does It Express?",
-        ha="center", va="center", fontsize=11, fontweight="bold", color="#1a1a1a")
+# Col 3 → Col 4
+harrow(ax, X[3]+BW[3]+0.02, X[4]-0.02, 2.40, "#922b21", 2.2)
 
-plt.tight_layout()
+plt.tight_layout(pad=0.3)
 plt.savefig(f"{FIG_DIR}/fig0_pipeline.pdf", format="pdf")
 plt.savefig(f"{FIG_DIR}/fig0_pipeline.png", format="png", dpi=300)
 plt.close()

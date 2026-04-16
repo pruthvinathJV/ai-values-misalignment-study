@@ -124,7 +124,7 @@ cbar.set_label("Misalignment\n(+ = individualist bias)", fontsize=9)
 cbar.ax.tick_params(labelsize=8)
 
 ax.set_xlabel("Country (ordered collectivist → individualist by WVS)", fontsize=10, labelpad=6)
-ax.set_title("Figure 1: AI Model Value Misalignment by Country and Model",
+ax.set_title("Misalignment by Country and Model",
              fontsize=11, pad=8, loc="left")
 
 # Add subtle grid
@@ -202,7 +202,7 @@ line_handle = Line2D([0], [0], color="#555555", linewidth=2,
 axes[-1].legend(handles=[line_handle, dot_handle],
                 fontsize=8, frameon=True, loc="upper right")
 
-fig.suptitle("Figure 2: Score Shift Across Experimental Conditions by Model",
+fig.suptitle("Score Shift Across Experimental Conditions by Model",
              fontsize=10, y=1.01, x=0.47)
 plt.tight_layout()
 plt.savefig(f"{FIG_DIR}/fig2_conditions.pdf", format="pdf")
@@ -252,7 +252,7 @@ ax.axvline(x=0, color="black", linewidth=0.8)
 ax.set_yticks(y_pos)
 ax.set_yticklabels([PROMPT_LABELS[p] for p in ps["prompt_id"]], fontsize=8.5)
 ax.set_xlabel("Mean Misalignment (+ = individualist bias)", fontsize=9)
-ax.set_title("Figure 3: Misalignment\nby Dilemma Topic", fontsize=10, pad=4, loc="left")
+ax.set_title("Misalignment\nby Dilemma Topic", fontsize=10, pad=4, loc="left")
 
 # Value labels — placed past the CI bound so they never overlap error bars
 PAD = 0.06
@@ -287,7 +287,7 @@ ax.plot([1,5],[1,5], color="#e15759", linewidth=1, linestyle="--",
 
 ax.set_xlabel("Judge 1 Score (Llama 3.3 70B)", fontsize=9)
 ax.set_ylabel("Judge 2 Score (DeepSeek-V3)", fontsize=9)
-ax.set_title("Figure 4: Inter-Judge\nAgreement", fontsize=10, pad=4, loc="left")
+ax.set_title("Inter-Judge\nAgreement", fontsize=10, pad=4, loc="left")
 ax.set_xlim(0.8, 5.2); ax.set_ylim(0.8, 5.2)
 
 # Annotate r and p

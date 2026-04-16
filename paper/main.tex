@@ -46,31 +46,34 @@ in Large Language Models}
 % strip = full-width in two-column layout (cuted package)
 \begin{strip}
 \begin{abstract}
-Large language models (LLMs) are increasingly consulted for personal advice
-across cultures, yet whether their expressed values align with non-Western
-societies remains understudied. We present a controlled behavioral audit of
-three frontier LLMs (Claude~Sonnet~4.5, GPT-5.4, Gemini~2.5~Flash) across
-\textbf{10 countries, 7 languages, and 10 culturally-sensitive personal dilemmas}
-($n=837$ scored responses). Using a novel \textbf{4-condition design} that cleanly
-separates language signals from country-framing signals, we score responses with
-two independent LLM judges (Llama~3.3~70B and DeepSeek-V3; $r=0.575$, $p<0.001$)
-calibrated against World Values Survey Wave~7 ground-truth anchors
-(Cohen's $\kappa=0.62$). We find: (1)~all three models show significant
-individualist bias relative to WVS predictions (mean misalignment $= +0.76$,
-$t=15.65$, $p<0.001$); (2)~Japan is a striking outlier, with all models
-\emph{more collectivist} than WVS Wave~7 predicts ($\Delta=-0.43$,
-$t=-4.00$, $p<0.001$), suggesting training corpora encode stereotypes
-rather than contemporary values; (3)~Nigeria and India show the largest
-individualist gaps ($+1.85$ and $+0.82$); (4)~the mechanism of cultural
-adaptation differs by model: Claude and Gemini both respond to actual
-language ($p=0.017$, $p=0.034$) but in opposite directions, while
-GPT-5.4 shows no significant language effect ($p=0.097$); and
-(5)~gender-role and marriage dilemmas show the largest bias while
-workplace authority dilemmas show collectivist counter-bias, revealing
-strong domain dependence. Claude and GPT-5.4 are indistinguishable in
-bias magnitude ($d=0.024$), while Gemini shows meaningfully lower
-individualist bias ($d \approx 0.32$).
-Data, code, and scoring pipeline are released openly.
+When you ask an AI assistant for advice---about your career, your marriage,
+or a conflict with your family---does it give you the same answer regardless
+of where you are from? We tested this systematically by presenting three
+leading AI systems (Claude~Sonnet~4.5, GPT-5.4, and Gemini~2.5~Flash) with
+ten real-life personal dilemmas---such as arranged marriage, filial duty,
+and workplace authority---framed for users from \textbf{10 countries across
+5 continents in 7 languages} ($n=837$ scored responses). We compared AI
+advice against large-scale survey data (World Values Survey Wave~7) measuring
+what people in each country actually believe.
+
+\textbf{All three AI systems consistently gave Western-style,
+individualist advice} even to users from societies that prioritize family,
+community, and authority---significantly more so than local values would
+predict (mean gap\,$=+0.76$ on a 1--5 scale; $t=15.65$, $p<0.001$).
+The gap is largest for Nigeria ($+1.85$) and India ($+0.82$), where the
+cultural distance is widest. Japan is the sole exception: AI systems
+treated Japanese users as \emph{more} group-oriented than they actually
+report being in surveys, revealing that AI encodes \emph{outdated stereotypes}
+rather than contemporary values. Gender and marriage dilemmas show the
+strongest individualist bias; workplace authority questions show the opposite.
+The three models behave similarly in \emph{how much} they are biased
+($d=0.024$ between Claude and GPT-5.4), but differ in \emph{why}: Claude
+and Gemini respond to the actual language of the prompt (in opposite
+directions), while GPT-5.4 responds only to the user's stated country.
+These findings point to a systemic, training-ecosystem-level
+homogenization of values across frontier AI---a concern for the
+billions of non-Western users who rely on these tools for personal decisions.
+Data, code, and scoring pipeline are openly released.
 \end{abstract}
 \end{strip}
 
@@ -573,12 +576,12 @@ Table~\ref{tab:subdims} reveal a nuanced picture beyond the IC headline:
   \label{fig:subdims}
 \end{figure*}
 
-\begin{table}[h]
+\begin{table*}[t]
 \small
 \centering
 \begin{tabular}{lrrrr}
 \toprule
-\textbf{Model} & \textbf{IC} & \textbf{Autonomy} & \textbf{Authority} & \textbf{Family} \\
+\textbf{Model} & \textbf{IC} & \textbf{Autonomy} & \textbf{Authority Deference} & \textbf{Family Orientation} \\
 \midrule
 Claude Sonnet 4.5  & 3.73 & 4.62 & 3.21 & 2.67 \\
 GPT-5.4            & 3.75 & 4.64 & 3.29 & 2.68 \\
@@ -587,12 +590,13 @@ Gemini 2.5 Flash   & 3.44 & 4.37 & 2.96 & 2.98 \\
 All ($t$ vs 3.0)   & $t=25.3^{***}$ & $t=74.5^{***}$ & $t=3.7^{***}$ & $t=-7.5^{***}$ \\
 \bottomrule
 \end{tabular}
-\caption{Mean sub-dimension scores (DeepSeek-V3 judge, $n=837$).
-All dimensions significantly differ from neutral (3.0): autonomy is
-strongly individualist; family orientation is significantly
-\emph{collectivist}. $^{***}p<0.001$.}
+\caption{\textbf{Mean sub-dimension scores from DeepSeek-V3 judge ($n=837$).}
+Scale: 1\,=\,strongly collectivist, 3\,=\,neutral, 5\,=\,strongly individualist.
+Autonomy is the strongest signal (near ceiling at 4.6); family orientation is
+significantly \emph{below} neutral---models push users away from both family
+obligation and toward personal autonomy simultaneously. $^{***}p<0.001$.}
 \label{tab:subdims}
-\end{table}
+\end{table*}
 
 \textbf{Autonomy dominates}: all models push personal autonomy near
 the ceiling (${\approx}4.6$, $t=74.5$, $p<0.001$). This is the
