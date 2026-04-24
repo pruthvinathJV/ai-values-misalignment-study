@@ -1,3 +1,4 @@
+\pdfoutput=1
 %% ACL 2026 / Findings of EMNLP / C3NLP compatible
 %% Compile with: pdflatex main.tex (twice) then bibtex main then pdflatex x2
 
@@ -19,6 +20,8 @@
 \usepackage{caption}
 \usepackage{cuted}      % strip environment: full-width blocks in two-column layout
 \usepackage{enumitem}
+\usepackage{float}
+\raggedbottom
 % Bold "Figure N:" / "Table N:" labels — placed after acl.sty loads caption
 \AtBeginDocument{\captionsetup{labelfont=bf,font=small}}
 
@@ -52,7 +55,7 @@ of where you are from? We tested this systematically by presenting three
 leading AI systems (Claude~Sonnet~4.5, GPT-5.4, and Gemini~2.5~Flash) with
 ten real-life personal dilemmas, such as arranged marriage, filial duty,
 and workplace authority, framed for users from \textbf{10 countries across
-5 continents in 7 languages} ($n=837$ scored responses). We compared AI
+5 continents in 7 languages} ($n=840$ scored responses). We compared AI
 advice against large-scale survey data (World Values Survey Wave~7) measuring
 what people in each country actually believe.
 
@@ -67,10 +70,12 @@ are, revealing that AI encodes \emph{outdated stereotypes} rather than
 contemporary values.
 Gender and marriage dilemmas show the strongest individualist bias, while
 workplace authority questions show the opposite pattern.
-All three models are biased by a similar amount ($d=0.024$ between Claude
-and GPT-5.4), but differ in what drives the bias: Claude and Gemini both
-respond to the language a prompt is written in (but in opposite directions),
-while GPT-5.4 responds only to the country the user says they are from.
+Claude and GPT-5.4 show nearly identical bias magnitude ($d=0.017$,
+negligible effect), while Gemini is lower but still significant ($d\approx0.32$
+vs.\ both). The models diverge in mechanism: Claude shifts further collectivist
+when a prompt is in the user's native language; Gemini shifts in the opposite
+direction (more individualist with native language); and GPT-5.4 responds only
+to the stated country identity regardless of the language used.
 These findings point to a systemic, training-ecosystem-level
 homogenization of values across frontier AI, a concern for the
 billions of non-Western users who rely on these tools for personal decisions.
@@ -150,12 +155,10 @@ catalogue.
 \citet{llm-globe-2024} benchmark eight LLMs against the GLOBE cultural framework
 across nine dimensions using direct questionnaire items, finding US-trained models
 show reduced collectivism relative to Chinese-trained models.
-Our work differs in three ways: (a)~we use \emph{behavioral dilemmas} rather than
-transparent questionnaire items, eliminating social desirability confounds where
-models ``know'' they are being evaluated; (b)~we anchor to WVS Wave~7 human
-survey data for each country, giving an absolute misalignment measure rather than
-relative model-to-model comparisons; (c)~our 4-condition design isolates language
-from country-label effects, a distinction no questionnaire-based study can make.
+Our work differs by using behavioral dilemmas instead of transparent
+questionnaire items (eliminating social desirability confounds), anchoring
+to WVS Wave~7 survey data for absolute misalignment measurement, and
+adding a 4-condition design that isolates language from country-label effects.
 
 Contemporaneously, \citet{anthropic-2025-values} analyzed 308K real Claude
 conversations and found that Claude actively expresses values, emphasizing
@@ -163,6 +166,25 @@ personal autonomy and individual enablement, in approximately 35\% of exchanges.
 Our findings extend this: these expressed values are not culturally neutral.
 They systematically favor individualist frameworks over the cultural orientations
 of users from collectivist societies (mean misalignment $= +0.888$ for Claude alone).
+
+\paragraph{Recent evaluation frameworks.}
+Three concurrent lines of work take complementary but distinct approaches.
+\citet{dove-2026} propose a distributional evaluation framework (DOVE) that
+uses optimal transport to compare LLM output distributions against human-written
+text across four cultures; our method differs in using scenario-based behavioral
+dilemmas with WVS survey anchors as absolute ground truth rather than
+distributional similarity.
+\citet{valuecompass-2025} benchmark 33 LLMs across 27 Schwartz value dimensions
+via direct questionnaire items on a dynamic leaderboard; we deliberately avoid
+direct questionnaire elicitation, which allows models to perform culturally
+appropriate answers without enacting them in behavioral advice.
+\citet{culturalpalette-2024} address the alignment side of the problem,
+proposing a multi-agent framework to \emph{fix} cultural bias across 18 countries;
+our contribution is upstream: rigorously \emph{measuring} the bias that
+such methods seek to correct.
+The label--language effects we document could further inform system-level
+routing or adapter selection in such frameworks, by revealing which signals
+(language vs.\ explicit identity) models respond to most strongly.
 
 \paragraph{Cultural dimensions theory.}
 Our individualism--collectivism (I--C) framing follows \citet{hofstede-2001},
@@ -178,8 +200,8 @@ societies as the primary population at risk of cultural misalignment.
   \centering
   \includegraphics[width=\textwidth]{figures/fig0_pipeline.pdf}
   \caption{Study pipeline overview. Left to right: study design
-  (10 countries $\times$ 10 dilemmas $\times$ 7 languages $\times$ 4 conditions
-  = 930 API calls), prompt assembly, three frontier LLMs at temperature\,$=0$,
+  (840 API calls: 10 prompts $\times$ 3 models across 10 countries and
+  up to 4 conditions per country), prompt assembly, three frontier LLMs at temperature\,$=0$,
   dual LLM scoring (IC score primary; DeepSeek-V3 sub-dimensions secondary),
   and misalignment analysis against WVS Wave~7 ground truth.}
   \label{fig:pipeline}
@@ -197,7 +219,7 @@ Each prompt is a fresh, stateless API call with no conversation history.
 
 \paragraph{Why these model versions?}
 We pin \emph{exact} model version strings to ensure full reproducibility:
-anyone can re-run the 930 API calls against the same snapshots and obtain
+anyone can re-run the 840 API calls against the same snapshots and obtain
 identical outputs (temperature\,$=0$, no sampling).
 All three are the highest-capability publicly available API versions of
 their respective families at the time the experiments were conducted
@@ -315,27 +337,43 @@ autonomy, authority deference, family orientation), each 1--5, by two
 independent judges: \textbf{Judge~1} (Llama~3.3~70B Instruct Turbo via
 Together AI; \citealt{touvron-2023}) and \textbf{Judge~2} (DeepSeek-V3
 via Together AI; \citealt{deepseek-2024}). Both run at temperature~$=0$ with
-structured JSON output. Pearson $r = 0.575$ ($p < 0.001$, $n = 837$) confirms
+structured JSON output. Pearson $r = 0.575$ ($p < 0.001$, $n = 840$) confirms
 convergent validity.
 
 \paragraph{Composite score.}
 Composite $=$ mean of the two judges' individualism--collectivism (IC) scores,
-the primary dimension of interest in this study. Both judges also produce
-autonomy, authority, and family sub-scores; these are excluded from the
-composite because Llama~3.3~70B compresses its non-IC scores toward neutral
-(SD\,$<0.4$), making them unreliable for cross-judge comparison.
+the primary dimension of interest in this study.
+Both judges also produce autonomy, authority, and family sub-scores.
+\textbf{Sub-dimension analysis uses DeepSeek-V3 scores only}
+(Section~\ref{sec:subdim}): Llama~3.3~70B compresses its non-IC scores toward
+neutral (SD\,$<0.4$), making them unreliable for cross-judge comparison, so
+they are excluded from the composite and from secondary analyses.
 
 \paragraph{Misalignment.}
 For each response, WVS misalignment $= $ composite score $-$ WVS anchor score,
-where the anchor is the normalised WVS Wave~7 score for the relevant dimension
-and country ($1$--$5$ scale).
+where the anchor is computed \emph{per prompt $\times$ country pairing}: each
+of the 10 prompts is mapped to its most relevant WVS dimension (e.g.\ Q75
+gender roles for P02, Q45 divorce attitudes for P04--P05), and the anchor value
+is the country-level mean on that specific WVS item, normalised to the 1--5 scale
+via min-max rescaling: $\hat{x} = 1 + 4 \times \frac{x - x_{\min}}{x_{\max} - x_{\min}}$,
+where $x$ is the country-level mean and $x_{\min}$, $x_{\max}$ are the theoretical
+endpoints of that item's response scale.
+For example, India's Q75 anchor (women's career after marriage) normalises to
+2.08 on the 1--5 scale; a model score of 3.9 on this prompt for India therefore
+yields misalignment $= 3.9 - 2.08 = +1.82$.
 Positive misalignment $=$ model more individualist than WVS predicts.
+Full prompt-to-WVS mappings and numeric anchor values per country are listed in
+Table~\ref{tab:anchors} (Appendix~\ref{app:anchor}).
+To validate the mapping, GPT-4o independently classified all 10 prompts to WVS variables;
+Cohen's $\kappa = 0.62$ (substantial agreement; Appendix~\ref{app:anchor}).
 
+\vspace{-4pt}
 \paragraph{Dataset.}
-930 total API calls (10 prompts $\times$ 4 conditions $\times$ 10 countries
-$\times$ 3 models, minus C1 which uses a single English baseline).
-After conditioning on non-refusal responses with both judge scores:
-$\mathbf{n = 837}$ scored responses; zero refusals across all models.
+840 API calls were made in total: the USA baseline (C1, English) plus
+nine non-English countries $\times$ three conditions (C2--C4) $\times$
+10 prompts $\times$ 3 models.
+All responses include both judge scores:
+$\mathbf{n = 840}$ scored responses; zero refusals across all models.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Results}
@@ -343,10 +381,19 @@ $\mathbf{n = 837}$ scored responses; zero refusals across all models.
 \subsection{H1: Do All Three Models Lean Individualist?}
 
 Yes, consistently and significantly. A one-sample $t$-test against zero
-misalignment gives $t = 15.65$, $p < 0.001$, $n = 837$, mean misalignment
+misalignment gives $t = 15.65$, $p < 0.001$, $n = 840$, mean misalignment
 $= +0.76$. On a 1--5 scale where 3 is neutral, all three models are, on
 average, roughly three-quarters of a point more individualist than people in
 the same countries report being in WVS surveys.
+All three per-model effects survive Bonferroni correction for three
+simultaneous comparisons (all $p < 0.001$).
+As a robustness check against clustering, we fit mixed-effects models with
+random intercepts for prompt, country, and prompt $\times$ country cells
+(Appendix~\ref{app:mixed}). The intercept (Claude mean misalignment) remains
+$+0.88$--$+0.90$ and highly significant ($z=3.86$--$6.81$, $p<0.001$)
+across all three specifications. Intraclass correlations of
+ICC$_\text{prompt}=0.27$ and ICC$_\text{country}=0.19$ confirm moderate
+clustering that does not overturn the main result.
 
 \begin{table}[h]
 \small
@@ -372,9 +419,12 @@ $\Delta$ = composite IC score $-$ WVS anchor.}
 \label{sec:h2}
 
 Claude and GPT-5.4 are virtually identical in bias magnitude (Cohen's
-$d=0.024$, negligible). Gemini shows meaningfully lower bias (Claude
-vs.\ Gemini $d=0.313$; GPT-5.4 vs.\ Gemini $d=0.331$, small--medium),
-though all three remain individually significant ($p < 0.001$). The
+$d=0.017$, 95\% CI $[-0.182, 0.153]$, negligible; CI spans zero).
+Gemini shows meaningfully lower bias (Claude vs.\ Gemini $d=0.319$,
+95\% CI $[0.151, 0.492]$; GPT-5.4 vs.\ Gemini $d=0.330$,
+95\% CI $[0.171, 0.504]$, small--medium; both CIs exclude zero),
+though all three remain individually significant ($p < 0.001$).
+Bootstrap CIs from 5{,}000 resamples. The
 near-convergence of Claude and GPT-5.4 implicates \textbf{shared
 training-ecosystem effects}. Gemini's broader multilingual pre-training,
 which spans 200+ languages with dedicated multilingual post-training
@@ -393,11 +443,7 @@ Several patterns are salient.
 \begin{figure*}[t]
   \centering
   \includegraphics[width=\textwidth]{figures/fig1_heatmap.pdf}
-  \caption{Mean WVS misalignment by model and country.
-  Positive (red) = model more individualist than WVS predicts;
-  negative (blue) = model more collectivist.
-  Countries ordered collectivist $\to$ individualist by WVS expected score.
-  $n=837$ scored responses; zero refusals.}
+  \caption{Mean WVS misalignment scores by model and country. Red = individualist bias; blue = collectivist bias relative to WVS predictions. Countries ordered left to right by increasing individualism (WVS expected score). $n = 840$; zero refusals.}
   \label{fig:heatmap}
 \end{figure*}
 
@@ -431,15 +477,7 @@ All conditions shift scores toward more collectivist values relative to C1
 \begin{figure*}[t]
   \centering
   \includegraphics[width=\textwidth]{figures/fig2_conditions.pdf}
-  \caption{Composite IC score across experimental conditions (C1--C4) per model.
-  Colored line = model mean $\pm$ 95\% bootstrap CI.
-  Grey dots = individual country means (10 countries, jittered horizontally to
-  reduce overlap); Japan (JPN) and Nigeria (NGA) are labelled on C1 as the most
-  extreme outliers: Japan sits near or below neutral (3.0) while Nigeria is
-  consistently highest.
-  C1 = English, no label; C2 = native language, no label;
-  C3 = native + country label; C4 = English + country label.
-  A C3--C4 gap indicates language carries cultural signal beyond the stated country.}
+  \caption{Composite IC score across experimental conditions (C1--C4) per model. Colored line = model mean $\pm$ 95\% CI; shaded band = confidence interval. Grey dots = individual country means (jittered horizontally to reduce overlap). C1 = English, no label (USA only); C2 = native language, no label; C3 = native + country label; C4 = English + country label. A C3--C4 gap indicates language carries cultural signal beyond the stated country.}
   \label{fig:conditions}
 \end{figure*}
 
@@ -458,7 +496,7 @@ with more autonomy-affirming cultural contexts, while Claude
 treats native language as a signal for greater cultural deference.
 
 \textbf{GPT-5.4} shows no significant C3 vs.\ C4 difference
-($W=376$, $p=0.097$). Its cultural adaptation is driven by the
+($W=376$, $p=0.097$, mean C3$-$C4\,$=+0.094$). Its cultural adaptation is driven by the
 declared country identity regardless of the actual language, a
 form of \emph{sycophancy to stated identity}: the model shifts
 responses based on who the user claims to be, not how they
@@ -471,21 +509,27 @@ actually communicate.
 \toprule
 \textbf{Model} & \textbf{Lang.\ $d$} & \textbf{Label $d$} & \textbf{C3 vs C4 $p$} \\
 \midrule
-Gemini  & $-0.763$ & $-1.236$ & $\mathbf{0.034}$ \\
-Claude  & $-0.363$ & $-0.514$ & $\mathbf{0.017}$ \\
-GPT-5.4 & $-0.331$ & $-0.627$ & $0.097$ \\
+Gemini  & $-0.750$ & $-1.211$ & $\mathbf{0.034}$ \\
+Claude  & $-0.388$ & $-0.546$ & $\mathbf{0.017}$ \\
+GPT-5.4 & $-0.322$ & $-0.613$ & $0.097$ \\
 \bottomrule
 \end{tabular}
 \caption{Cohen's $d$ for language effect (C2$-$C1) and country-label effect
 (C4$-$C1), and Wilcoxon signed-rank $p$-value for C3 vs.\ C4 (paired by
-prompt $\times$ country). Both \textbf{Claude} and \textbf{Gemini} show
-significant language effects, but in opposite directions.}
+prompt $\times$ country). Bootstrap 95\% CIs (5{,}000 resamples) are reported
+in Appendix~\ref{app:condci}. Both \textbf{Claude} and \textbf{Gemini} show
+significant language effects, but in opposite directions.
+\textit{Note:} C2$-$C1 and C4$-$C1 use the USA-only C1 baseline and thus
+partially conflate country with condition; the within-country Wilcoxon
+C3 vs.\ C4 tests (rightmost column) provide the cleanest language-effect estimate.}
 \label{tab:sycophancy}
 \end{table}
 
 All three models show large label effects
-(Cohen's $d$: $-0.514$ to $-1.236$), confirming that stated
+(Cohen's $d$: $-0.546$ to $-1.211$), confirming that stated
 country identity is the dominant signal across the board.
+Per-language score breakdowns across all conditions are reported in
+Appendix~\ref{app:perlang}.
 
 \subsection{H4: Domain-Specific Bias}
 
@@ -495,26 +539,30 @@ Figure~\ref{fig:prompts} shows prompt-level misalignment with bootstrap
 \begin{figure}[h]
   \centering
   \includegraphics[width=\columnwidth]{figures/fig3_prompts.pdf}
-  \caption{Mean WVS misalignment by dilemma topic with bootstrap 95\% CIs
-  (5{,}000 resamples). Error bars show the 95\% confidence interval.
-  P02, P05, P04: CIs entirely above zero (robust individualist bias).
-  P03: CI entirely below zero (robust collectivist bias).}
+  \caption{Mean WVS misalignment by dilemma topic with bootstrap 95\% CIs (5{,}000 resamples). Positive values (red) = individualist bias; negative values (blue) = collectivist bias. Topics ordered by mean misalignment. Eight of ten topics show robust individualist bias; Women's career after marriage and Arranged marriage show the strongest effect ($+1.85$, $+1.80$). Only Challenge manager shows robust collectivist bias ($-0.26$), with Religion vs career near zero ($-0.04$).}
   \label{fig:prompts}
 \end{figure}
 
-\textbf{Gender and marriage dilemmas dominate}: P02 (women's career after
-marriage, $+1.85$), P04 (arranged marriage, $+1.78$), and P05 (unhappy
-marriage, $+1.44$) show the strongest individualist bias, with bootstrap
-CIs entirely above zero.
+\textbf{Relationship and gender dilemmas show the strongest individualist push.}
+When asked about marriage, women's careers, or arranged unions, all three
+models give strongly autonomy-affirming advice---``follow your heart,''
+``your career matters,'' ``you are not obligated to stay.''
+P02 (women's career after marriage, $+1.85$), P04 (arranged marriage,
+$+1.78$), and P05 (unhappy marriage, $+1.44$) show the largest gaps with
+local WVS values, with bootstrap CIs entirely above zero across all models.
+These topics also happen to be where WVS shows the sharpest cross-cultural
+differences, so the AI's uniform individualist stance clashes most
+severely with the values of users from collectivist societies.
 
-\textbf{Workplace authority is reversed}: P03 (challenge manager's decision,
-$-0.26$) is the only prompt with a CI entirely below zero. Models are more
-deferential to hierarchical authority than WVS predicts,
-likely reflecting professional norms in corporate training data.
-
-This domain pattern suggests the individualist default is amplified in
-domains where training data (relationship advice, self-help) skews individualist
-and dampened in domains with institutional framing.
+\textbf{Workplace authority is the exception.}
+P03 (challenge manager, $-0.26$) is the only prompt where models are
+\emph{more deferential} than WVS predicts---the only CI entirely below zero.
+Even when a user says they know a better solution, all three models tend
+to advise caution and deference rather than speaking up. This likely
+reflects the tone of professional training data (HR guides, management
+forums), which typically counsel employees to work within authority
+structures. The result is a curious asymmetry: AI is highly individualist
+in personal life, but reverts to institutional deference at work.
 
 \subsection{Secondary: Sub-Dimension Analysis (DeepSeek-V3)}
 \label{sec:subdim}
@@ -525,47 +573,22 @@ Family SD\,$=0.88$). We report sub-dimension findings using DeepSeek-V3
 scores only, because Llama~3.3~70B compresses its non-IC scores toward
 neutral (SD\,$<0.4$), making them unreliable.
 
-Figure~\ref{fig:subdims} and the per-model means in
-Table~\ref{tab:subdims} reveal a nuanced picture beyond the IC headline:
+Figures~\ref{fig:subdims} and~\ref{fig:subdims_bars} reveal a nuanced picture beyond the IC headline:
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=\textwidth]{figures/fig5_subdimensions.pdf}
-  \caption{Sub-dimension scores from DeepSeek-V3 judge ($n=837$).
-  \textbf{(a)}~Heatmap of mean scores per dilemma (rows = dimensions,
-  columns = prompts P01--P10); red = individualist ($>3$), blue = collectivist
-  ($<3$), white = neutral. Autonomy is near ceiling across most dilemmas;
-  family orientation is collectivist (blue) for religion and
-  arranged-marriage scenarios.
-  \textbf{(b)}~Per-model mean scores across all four dimensions.
-  All three models score well above neutral on IC (${\approx}4.0$) and
-  autonomy (${\approx}4.5$); all score below neutral on family orientation
-  (${\approx}2.8$), confirming the individualist pattern holds across
-  sub-dimensions. Dashed line = neutral (3.0).}
+  \includegraphics[width=\textwidth]{figures/fig5a_heatmap.pdf}
+  \caption{Mean sub-dimension scores by dilemma prompt (DeepSeek-V3 judge, $n = 840$). Rows = sub-dimensions; columns = prompts ordered left to right by mean IC misalignment. Red = above neutral ($> 3.0$), blue = below neutral ($< 3.0$), white = neutral. Autonomy is near ceiling across all prompts; Family Orientation is below neutral for religion and marriage scenarios.}
   \label{fig:subdims}
 \end{figure*}
 
-\begin{table*}[t]
-\small
-\centering
-\begin{tabular}{lrrrr}
-\toprule
-\textbf{Model} & \textbf{IC} & \textbf{Autonomy} & \textbf{Authority Deference} & \textbf{Family Orientation} \\
-\midrule
-Claude Sonnet 4.5  & 3.73 & 4.62 & 3.21 & 2.67 \\
-GPT-5.4            & 3.75 & 4.64 & 3.29 & 2.68 \\
-Gemini 2.5 Flash   & 3.44 & 4.37 & 2.96 & 2.98 \\
-\midrule
-All ($t$ vs 3.0)   & $t=25.3^{***}$ & $t=74.5^{***}$ & $t=3.7^{***}$ & $t=-7.5^{***}$ \\
-\bottomrule
-\end{tabular}
-\caption{\textbf{Mean sub-dimension scores from DeepSeek-V3 judge ($n=837$).}
-Scale: 1\,=\,strongly collectivist, 3\,=\,neutral, 5\,=\,strongly individualist.
-Autonomy is the strongest signal (near ceiling at 4.6); family orientation is
-significantly \emph{below} neutral, meaning models push users both away from
-family obligation and toward personal autonomy simultaneously. $^{***}p<0.001$.}
-\label{tab:subdims}
-\end{table*}
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/fig5b_model_bars.pdf}
+  \caption{Per-model mean sub-dimension scores (DeepSeek-V3 judge, $n = 840$). Bars show mean score per dimension per model; dashed line = neutral (3.0); $t$-statistics (vs.\ 3.0) shown below each dimension label. All three models score well above neutral on IC Score (${\approx}4.0$) and Autonomy (${\approx}4.5$); Authority Deference is marginally above neutral; Family Orientation is significantly below neutral (${\approx}2.8$, $t = -7.5^{***}$), confirming the individualist pattern holds across models and sub-dimensions. $^{***}p < 0.001$.}
+  \label{fig:subdims_bars}
+\end{figure}
+
 
 \textbf{Autonomy dominates.} All models push personal autonomy near
 the ceiling (${\approx}4.6$, $t=74.5$, $p<0.001$). This is the
@@ -587,9 +610,10 @@ manager), where models are more deferential than WVS predicts, likely
 because workplace authority scenarios appear frequently in professional
 training data with a ``stay professional'' norm.
 
-\textbf{Gemini shows lower autonomy pressure} ($4.37$ vs.\ $4.62$/$4.64$
-for Claude/GPT-5.4), consistent with its lower IC bias and suggesting
-a less aggressive autonomy-promoting stance overall.
+\textbf{Gemini shows lower autonomy pressure} (mean autonomy score $4.37$
+vs.\ $4.62$/$4.64$ for Claude/GPT-5.4),
+consistent with its lower IC bias and suggesting a less aggressive
+autonomy-promoting stance overall.
 
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Discussion}
@@ -607,7 +631,7 @@ autonomy-affirming responses as more helpful. Third, \textbf{positive
 feedback loops}: users from individualist cultures may rate autonomous advice
 more positively, amplifying the bias iteratively.
 
-The near-convergence of Claude and GPT-5.4 ($d=0.024$) and the
+The near-convergence of Claude and GPT-5.4 ($d=0.017$) and the
 relatively lower bias in Gemini ($d \approx 0.32$) suggest shared
 training-ecosystem effects. As noted in Section~\ref{sec:h2}, Gemini's
 broader multilingual pre-training and Claude's Constitutional AI principles
@@ -627,6 +651,28 @@ models \emph{do} when advising Japanese users. Germany, by contrast, now
 shows positive misalignment ($+0.68$), consistent with the broader
 individualist-bias pattern and suggesting that AI stereotypes about Germany
 align directionally with its modernized values.
+
+To test robustness, we recomputed Japan's misalignment excluding the three
+marriage and gender prompts (P02, P04, P05), which have the strongest
+individualist signal globally.
+The reversal \emph{strengthens}: mean $= -0.48$, $t = -3.95$, $p < 0.001$,
+$n = 63$, compared to $-0.43$ on all prompts.
+The Japan effect is therefore not an artefact of those dilemma types; it
+reflects a broad stereotype pattern across authority, family, and civic
+dilemmas as well.
+
+\subsection{Language Register as a Rival Hypothesis}
+
+A potential confound for the language effect (H3) is that formal registers
+in languages like Hindi are inherently more deferential than English casual
+register---producing collectivist-seeming responses independent of any cultural
+calibration. The C4 condition (English prompt, country label stated) partially
+addresses this: C4 removes language register entirely while preserving the
+country signal. The finding that C4 produces large label effects comparable in
+direction to C2/C3 across all three models indicates that country identity, not
+register, is the primary driver of the observed shifts. Register effects cannot
+be fully ruled out for C2 vs.\ C1 comparisons, and remain a limitation
+for future work with professional translation and back-translation checks.
 
 \subsection{Implications for Model Developers}
 
@@ -650,13 +696,15 @@ cultural competence or spurious associations.
 
 \textbf{Prompt scale.} Ten prompts is a small benchmark. Domain-level
 claims (e.g., gender dilemmas most biased) should be treated as suggestive
-pending replication with 40+ prompts. The overall H1 finding ($t=15.65$,
-$n=837$) is robust to this concern.
+pending replication with a substantially larger and independently validated prompt set. The overall H1 finding ($t=15.65$,
+$n=840$) is robust to this concern.
 
 \textbf{LLM judge independence.} Both judges (Llama, DeepSeek) were trained
 with RLHF that may share the same individualist bias as the evaluated models,
-potentially leading to systematic score inflation. Human rater validation on
-a subset would strengthen the methodology.
+potentially leading to systematic score inflation. Future work should include
+native speaker raters from each culture on a stratified subset to compute
+Krippendorff's $\alpha$ or intra-class correlation and calibrate model judges
+against human ground truth.
 
 \textbf{Spearman calibration test.} Spearman $\rho = 0.37$--$0.42$,
 $p = 0.23$--$0.29$ at $n=10$ countries per model. The correlation is positive
@@ -670,16 +718,32 @@ comparing against a moving cultural baseline.
 survey language, making C2 and C4 identical for NGA. The language/label
 separation cannot be tested for this country.
 
+\textbf{Machine translation.} Prompts were translated via Google Translate API.
+Machine translation may alter pragmatic nuance---``family obligation'' in Hindi
+carries connotations not fully preserved by direct translation. We claim
+structural equivalence (same dilemma, same explicit obligation), not semantic
+equivalence. Professional translation, back-translation checks, and automated
+quality estimation (e.g., COMET scores) are left for future replication.
+
+\textbf{Language $\neq$ cultural identity.} We measure how models behave when
+given linguistic and geographic signals associated with a culture; we do not
+measure what users from that culture actually want or believe. Findings are
+claims about \emph{model behaviour}, not about the preferences of real users
+from those countries. Additionally, sensitivity to exact label phrasing
+(e.g., naturalistic identity cues vs.\ explicit ``I am from [country]'')
+is left for future work; the current findings reflect only the explicit
+country-name framing used in C3 and C4.
+
 % ─────────────────────────────────────────────────────────────────────────────
 \section{Conclusion}
 
 We audited three frontier LLMs across 10 countries, 7 languages, and 10
-personal dilemma scenarios, scoring 837 responses against World Values Survey
+personal dilemma scenarios, scoring 840 responses against World Values Survey
 Wave~7 ground truth. All three models show significant individualist bias
 ($t=15.65$, $p<0.001$, mean $= +0.76$), strongest in Nigeria ($+1.85$)
 and India ($+0.82$). Japan is the only reversal country ($-0.43$, $t=-4.00$), where models
 encode traditional cultural stereotypes rather than contemporary survey values. Claude and GPT-5.4 show nearly
-identical bias magnitude ($d=0.024$); Gemini shows lower bias ($d \approx 0.32$
+identical bias magnitude ($d=0.017$); Gemini shows lower bias ($d \approx 0.32$
 vs.\ both). All three models respond to declared country labels (large
 label effects), but diverge on language: Claude shifts further collectivist
 with native language, Gemini shifts individualist, and GPT-5.4 is
@@ -692,7 +756,7 @@ gender-role and marriage dilemmas and reversed in workplace authority dilemmas.
 All materials needed to replicate this study are available openly:
 \begin{itemize}[noitemsep,topsep=2pt]
   \item \textbf{Data}: The full SQLite database (\texttt{experiment.db})
-    containing all 930 API responses, judge scores, WVS anchors, and
+    containing all 840 API responses, judge scores, WVS anchors, and
     misalignment values is available at
     \url{https://github.com/pruthvinathJV/ai-values-misalignment-study}.
   \item \textbf{Code}: All Python notebooks (01--06) for experiment setup,
@@ -703,7 +767,10 @@ All materials needed to replicate this study are available openly:
   \item \textbf{Judge prompt}: The exact scoring prompt used for both judges
     is reproduced in Appendix~\ref{app:judgeprompt}.
   \item \textbf{API versions}: All model versions are pinned (see
-    Section~\ref{sec:models-section}) to enable bit-exact reproduction.
+    Section~\ref{sec:models-section}) to enable high-fidelity reproduction.
+    Note that LLM API outputs may vary slightly across runs even at
+    temperature~$= 0$ due to provider-side batching and hardware changes;
+    exact numerical values may therefore differ marginally from those reported.
 \end{itemize}
 WVS Wave~7 data is publicly available at
 \url{https://www.worldvaluessurvey.org}.
@@ -867,6 +934,136 @@ The three disagreements are in genuinely ambiguous cases:
 P01 (career vs.\ parents: authority deference vs.\ filial obedience),
 P04 (arranged marriage: obedience vs.\ divorce attitudes),
 P07 (mental health: family loyalty vs.\ religious stigma).
+Table~\ref{tab:anchors} lists the full numeric anchor values per prompt $\times$ country.
 
+\begin{strip}
+\scriptsize\centering
+\setlength{\tabcolsep}{4.5pt}
+\begin{tabular}{llrrrrrrrrrrr}
+\toprule
+\textbf{ID} & \textbf{Topic} & \textbf{WVS} & \textbf{NGA} & \textbf{IND} & \textbf{CHN} & \textbf{RUS} & \textbf{BRA} & \textbf{KOR} & \textbf{MEX} & \textbf{DEU} & \textbf{USA} & \textbf{JPN} \\
+\midrule
+P01 & Career vs.\ parents    & Q71 & 3.57 & 2.48 & 1.00 & 3.08 & 4.93 & 3.19 & 5.00 & 3.41 & 4.10 & 3.45 \\
+P02 & Women's career          & Q75 & 2.40 & 1.00 & 1.59 & 2.75 & 2.26 & 3.13 & 3.01 & 2.09 & 3.46 & 3.10 \\
+P03 & Challenge manager       & Q71 & 3.57 & 2.48 & 1.00 & 3.08 & 4.93 & 3.19 & 5.00 & 3.41 & 4.10 & 3.45 \\
+P04 & Arranged marriage       & Q45 & 1.00 & 2.39 & 2.11 & 2.08 & 1.53 & 3.67 & 1.86 & 2.35 & 2.10 & 5.00 \\
+P05 & Unhappy marriage        & Q45 & 1.00 & 2.39 & 2.11 & 2.08 & 1.53 & 3.67 & 1.86 & 2.35 & 2.10 & 5.00 \\
+P06 & Eldest abroad           & Q31 & 1.61 & 2.56 & 3.08 & 2.17 & 3.89 & 2.65 & 4.27 & 5.00 & 4.65 & 3.82 \\
+P07 & Mental health           & Q6  & 1.09 & 1.95 & 4.99 & 3.57 & 2.27 & 4.01 & 2.47 & 4.06 & 3.28 & 5.00 \\
+P08 & Religion vs.\ career    & Q6  & 1.09 & 1.95 & 4.99 & 3.57 & 2.27 & 4.01 & 2.47 & 4.06 & 3.28 & 5.00 \\
+P09 & Question doctor         & Q71 & 3.57 & 2.48 & 1.00 & 3.08 & 4.93 & 3.19 & 5.00 & 3.41 & 4.10 & 3.45 \\
+P10 & Report family           & Q31 & 1.61 & 2.56 & 3.08 & 2.17 & 3.89 & 2.65 & 4.27 & 5.00 & 4.65 & 3.82 \\
+\bottomrule
+\end{tabular}
+\captionof{table}{WVS anchor values per prompt $\times$ country (1--5 scale;
+1\,=\,collectivist, 5\,=\,individualist). Each value is the country-level mean
+on the mapped WVS item, normalised to 1--5 via min-max rescaling.
+Prompts sharing a WVS variable have identical values
+(P01/P03/P09: Q71 authority; P04/P05: Q45 divorce; P06/P10: Q31 obedience;
+P07/P08: Q6 religion). Countries ordered collectivist $\to$ individualist.
+Values of 1.00 or 5.00 indicate that country's raw WVS mean falls at the
+theoretical floor or ceiling of the item's response scale, not a data anomaly.}
+\label{tab:anchors}
+\end{strip}
+
+\section{Bootstrap CIs for Condition Effects}
+\label{app:condci}
+
+Bootstrap 95\% CIs (5{,}000 resamples, seed~42) for Cohen's $d$ reported
+in Table~\ref{tab:sycophancy}.
+
+\begin{table}[H]
+\scriptsize\centering
+\begin{tabular}{lrrrr}
+\toprule
+& \multicolumn{2}{c}{\textbf{Language (C2$-$C1)}} & \multicolumn{2}{c}{\textbf{Label (C4$-$C1)}} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+\textbf{M} & \textbf{$d$} & \textbf{95\% CI} & \textbf{$d$} & \textbf{95\% CI} \\
+\midrule
+Ge & $-0.750$ & $[-1.42,\ -0.18]$ & $-1.211$ & $[-1.86,\ -0.72]$ \\
+Cl & $-0.388$ & $[-1.13,\ \phantom{-}0.27]$ & $-0.546$ & $[-1.35,\ \phantom{-}0.13]$ \\
+GP & $-0.322$ & $[-1.00,\ \phantom{-}0.28]$ & $-0.613$ & $[-1.28,\ -0.06]$ \\
+\bottomrule
+\end{tabular}
+\caption{Bootstrap 95\% CIs for Cohen's $d$ (language: C2$-$C1;
+label: C4$-$C1). M: Ge=Gemini, Cl=Claude, GP=GPT-5.4.
+CIs excluding zero indicate robust effects.}
+\end{table}
+
+\section{Per-Language Score Breakdown}
+\label{app:perlang}
+
+Mean composite IC score per language and experimental condition ($n=840$).
+C1 is the English baseline run for the USA only; C2--C4 cover the nine
+non-English countries (English appears in C4 as the prompt language for all
+nine, but is reported under each country's native-language row).
+
+\begin{table}[H]
+\small\centering
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Language} & \textbf{C1} & \textbf{C2} & \textbf{C3} & \textbf{C4} \\
+\midrule
+Hindi           & ---  & 3.15 & 2.93 & 3.05 \\
+Chinese         & ---  & 3.95 & 3.50 & 3.50 \\
+Russian         & ---  & 4.02 & 4.00 & 3.85 \\
+Portuguese      & ---  & 4.10 & 4.27 & 4.02 \\
+Korean          & ---  & 3.98 & 3.87 & 3.77 \\
+Spanish         & ---  & 4.05 & 3.52 & 3.50 \\
+German          & ---  & 4.10 & 4.15 & 4.40 \\
+English (NGA)   & ---  & 4.17 & 3.77 & 3.78 \\
+Japanese        & ---  & 3.90 & 3.63 & 3.50 \\
+English (USA)   & 4.23 & ---  & ---  & ---  \\
+\midrule
+\textbf{Overall} & \textbf{4.23} & \textbf{3.94} & \textbf{3.74} & \textbf{3.71} \\
+\bottomrule
+\end{tabular}
+\caption{Mean composite IC score by language and condition. ``---'' indicates
+the condition was not run for that language. C1 is English-only (USA baseline);
+C2--C4 cover the nine non-English countries.
+\textbf{C4 uses English prompts for all countries} (country label stated in English).
+For Nigeria, C2--C4 all use English, so C3 and C4 reflect the country-label
+effect only (no language change); C3 $\approx$ C4 is expected and confirms this.
+Hindi shows the lowest scores, consistent with India's high collectivism in WVS.}
+\label{tab:perlang}
+\end{table}
+
+
+\clearpage
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Mixed-Effects Robustness Check}
+\label{app:mixed}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/figA1_mixed_effects.pdf}
+  \caption{Forest plot of mixed-effects estimates. Dots = fixed-effect
+    estimates; error bars = $\pm$1 SE; dashed vertical = zero; grey
+    dashed = original $t$-test intercept ($+0.888$). Reference category =
+    Claude Sonnet~4.5. Three random-intercept specifications
+    (prompt-only, country-only, prompt$\times$country) yield stable
+    estimates. ICC$_{\text{prompt}}=0.27$, ICC$_{\text{country}}=0.19$
+    confirm moderate clustering that does not overturn the main result.
+    $^{***}p<0.001$; unlabelled = not significant.}
+  \label{fig:A1}
+\end{figure}
+
+One-sample $t$-tests treat all 837 responses as independent, but responses
+are clustered by prompt and country. To verify that clustering does not
+invalidate the main findings, we fit linear mixed-effects models with
+\texttt{misalignment} as the outcome and \texttt{model} as a fixed effect
+(Claude as reference), with random intercepts for three grouping structures:
+(A)~prompt only, (B)~country only, and (C)~prompt $\times$ country cell
+(Figure~\ref{fig:A1}). Models were fit via REML using
+\texttt{statsmodels} \texttt{MixedLM}.
+
+Prompt-level ICC ($= 0.27$) and country-level ICC ($= 0.19$) confirm that
+clustering is present and non-trivial, validating the reviewer concern.
+However, the intercept (mean misalignment for Claude) remains highly
+significant across all specifications ($z = 3.86$--$6.81$, $p < 0.001$),
+and the direction and magnitude of all fixed effects are stable. The
+one-sample $t$-test ($t=15.65$) is therefore conservative with respect to
+clustering: inflated degrees of freedom make rejection of $H_0$ \emph{harder},
+not easier.
 
 \end{document}

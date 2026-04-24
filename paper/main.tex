@@ -1,3 +1,4 @@
+\pdfoutput=1
 %% ACL 2026 / Findings of EMNLP / C3NLP compatible
 %% Compile with: pdflatex main.tex (twice) then bibtex main then pdflatex x2
 
@@ -1033,31 +1034,19 @@ Hindi shows the lowest scores, consistent with India's high collectivism in WVS.
 \section{Mixed-Effects Robustness Check}
 \label{app:mixed}
 
-\begin{table*}[t]
-\small\centering
-\begin{tabular}{lrrr}
-\toprule
-\textbf{Random intercept} & \textbf{Intercept (Claude)} & \textbf{Gemini $-$ Claude} & \textbf{GPT-5.4 $-$ Claude} \\
-\midrule
-Prompt only             & $+0.895^{***}$ & $-0.435^{***}$ & $+0.026$ \\
-                        & $(0.232)$      & $(0.101)$      & $(0.101)$ \\
-Country only            & $+0.878^{***}$ & $-0.427^{***}$ & $+0.034$ \\
-                        & $(0.196)$      & $(0.106)$      & $(0.106)$ \\
-Prompt $\times$ Country & $+0.893^{***}$ & $-0.441^{***}$ & $+0.022$ \\
-                        & $(0.131)$      & $(0.042)$      & $(0.042)$ \\
-\midrule
-Original $t$-test       & $+0.888^{***}$ & ---            & ---       \\
-\bottomrule
-\end{tabular}
-\caption{Mixed-effects robustness check. Coefficients are mean WVS misalignment
-(reference category = Claude Sonnet 4.5); standard errors in parentheses.
-$^{***}p<0.001$. All three random-intercept specifications confirm significant
-individualist bias for Claude and GPT-5.4; Gemini 2.5 Flash is significantly
-lower than both but still positive. Intraclass correlations:
-ICC$_{\text{prompt}}=0.27$, ICC$_{\text{country}}=0.19$, indicating moderate
-clustering that does not overturn the main result.}
-\label{tab:mixed}
-\end{table*}
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/figA1_mixed_effects.pdf}
+  \caption{Forest plot of mixed-effects estimates. Dots = fixed-effect
+    estimates; error bars = $\pm$1 SE; dashed vertical = zero; grey
+    dashed = original $t$-test intercept ($+0.888$). Reference category =
+    Claude Sonnet~4.5. Three random-intercept specifications
+    (prompt-only, country-only, prompt$\times$country) yield stable
+    estimates. ICC$_{\text{prompt}}=0.27$, ICC$_{\text{country}}=0.19$
+    confirm moderate clustering that does not overturn the main result.
+    $^{***}p<0.001$; unlabelled = not significant.}
+  \label{fig:A1}
+\end{figure}
 
 One-sample $t$-tests treat all 837 responses as independent, but responses
 are clustered by prompt and country. To verify that clustering does not
@@ -1065,7 +1054,7 @@ invalidate the main findings, we fit linear mixed-effects models with
 \texttt{misalignment} as the outcome and \texttt{model} as a fixed effect
 (Claude as reference), with random intercepts for three grouping structures:
 (A)~prompt only, (B)~country only, and (C)~prompt $\times$ country cell
-(Table~\ref{tab:mixed}). Models were fit via REML using
+(Figure~\ref{fig:A1}). Models were fit via REML using
 \texttt{statsmodels} \texttt{MixedLM}.
 
 Prompt-level ICC ($= 0.27$) and country-level ICC ($= 0.19$) confirm that
