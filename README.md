@@ -62,15 +62,13 @@ Positive = individualist bias relative to WVS country-level values (1–5 scale)
 ## Citation
 
 ```bibtex
-@misc{jeripityvenkata2026whenaispeaks,
-  title={When AI Speaks, Whose Values Does It Express?
-         A Cross-Cultural Audit of Individualism--Collectivism Bias
-         in Large Language Models},
-  author={Jeripity Venkata, Pruthvinath},
-  year={2026},
-  eprint={2604.22153},
-  archivePrefix={arXiv},
-  primaryClass={cs.CL},
-  url={https://arxiv.org/abs/2604.22153}
+@misc{venkata2026aispeaksvaluesdoes,
+      title={When AI Speaks, Whose Values Does It Express? A Cross-Cultural Audit of Individualism-Collectivism Bias in Large Language Models},
+      author={Pruthvinath Jeripity Venkata},
+      year={2026},
+      eprint={2604.22153},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2604.22153},
 }
 ```
